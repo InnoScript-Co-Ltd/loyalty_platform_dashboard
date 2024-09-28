@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import Cropper from "react-cropper";
+import { useRef, useState } from 'react';
+import { Cropper } from "react-cropper";
 import "cropperjs/dist/cropper.css";
 
-export const CropImage = () => {
+export const CropImage = ({ authService, userId, refetchUser, cancelEdit }) => {
 
     const [crop, setCrop] = useState(null);
     const [src, setSrc] = useState(null);
     const [preview, setPreview] = useState(null);
+    const [cropper, setCropper] = useState(null);
+    const cropperRef = useRef(null);
 
     const getCropData = async () => {
-        if (cropper) {
-            const file = await fetch(cropper.getCroppedCanvas().toDataURL())
+        const cropperInstance = cropperRef?.current.cropper;
+        if (cropperInstance) {
+            const file = await fetch(cropperInstance.getCroppedCanvas().toDataURL())
                 .then((res) => res.blob())
                 .then((blob) => {
                     return new File([blob], "newAvatar.png", { type: "image/png" });
@@ -30,7 +33,7 @@ export const CropImage = () => {
     return (
         <div>
             {!src && (
-                <div className=" custom-thumbnail"
+                <div className="custom-thumbnail"
                     onClick={() => {
                         document.getElementById("thumbnail").click();
                     }}>
@@ -38,7 +41,7 @@ export const CropImage = () => {
                         id="thumbnail"
                         type="file"
                         accept="image/*"
-                        className=" hidden"
+                        className="hidden"
                         onChange={(e) => {
                             const objectUrl = URL.createObjectURL(e.target.files[0]);
                             setSrc(objectUrl);
@@ -49,7 +52,7 @@ export const CropImage = () => {
 
             {src && (
                 <Cropper
-                    src={src }
+                    src={src}
                     style={{ height: 400, width: 400 }}
                     initialAspectRatio={4 / 3}
                     minCropBoxHeight={100}
@@ -59,16 +62,15 @@ export const CropImage = () => {
                     onInitialized={(instance) => {
                         setCropper(instance);
                     }}
+                    ref={cropperRef}
                 />
             )}
 
-            {
-                preview && (
-                    <img src={preview} alt='CropResult' title='CropResult' />
-                )
-            }
+            {preview && (
+                <img src={preview} alt='CropResult' title='CropResult' />
+            )}
 
             <button onClick={getCropData}>Crop Image</button>
         </div>
-    )
-}
+    );
+};

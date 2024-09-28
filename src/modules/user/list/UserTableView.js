@@ -5,25 +5,22 @@ import { useDispatch, useSelector } from 'react-redux'
 import { userPayload } from '../userPayload';
 import { userService } from '../userService';
 import { auditColumns, paginateOptions } from '../../../constants/config';
-import { Search } from '../../../shares/Search';
-import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
-import { PaginatorRight } from '../../../shares/PaginatorRight';
 import { Column } from 'primereact/column';
 import { Status } from '../../../shares/Status';
 import { dateAge, dateFormat, datetime } from '../../../helpers/datetime';
 import { paths } from '../../../constants/paths';
 import { Paginator } from 'primereact/paginator';
 import { setPaginate } from '../userSlice';
-import { FilterByStatus } from '../../../shares/FilterByStatus';
 import { setDateFilter, setStatusFilter } from '../../../shares/shareSlice';
 import { getRequest } from '../../../helpers/api';
 import { endpoints } from '../../../constants/endpoints';
-import moment from 'moment';
-import { FilterByDate } from '../../../shares/FilterByDate';
 import { Card } from 'primereact/card';
 import { NavigateId } from '../../../shares/NavigateId';
-import { ExportExcel } from "../../../shares/export";
+
+import { tableController } from '../../../helpers/tableController';
+import HeaderRender from '../../../shares/TableHeader';
+import FooterRender from '../../../shares/TableFooter';
 
 export const UserTableView = () => {
 
@@ -39,84 +36,6 @@ export const UserTableView = () => {
     const userStatus = useRef(['ALL']);
     const columns = useRef(userPayload?.columns);
     const showColumns = useRef(columns?.current?.filter(col => col.show === true));
-
-
-    /**
-     * Event - Paginate Page Change
-     * @param {*} event 
-     */
-    const onPageChange = (event) => {
-        first.current = event.page * paginateParams.per_page;
-        dispatch(
-            setPaginate({
-                ...paginateParams,
-                page: event?.page + 1,
-                per_page: event?.rows,
-            })
-        );
-    };
-
-    /**
-     * Event - Search
-     * @param {*} event 
-     */
-    const onSearchChange = (event) => {
-        dispatch(
-            setPaginate({
-                ...paginateParams,
-                search: event,
-            })
-        );
-    };
-
-    /**
-     * Event - Column sorting "DESC | ASC"
-     * @param {*} event 
-     */
-    const onSort = (event) => {
-        const sortOrder = event.sortOrder === 1 ? "DESC" : "ASC";
-        dispatch(
-            setPaginate({
-                ...paginateParams,
-                sort: sortOrder,
-                order: event.sortField
-            })
-        );
-    }
-
-    /**
-   * On Change Filter
-   * @param {*} e
-   */
-    const onFilter = (e) => {
-        let updatePaginateParams = { ...paginateParams };
-
-        if (e === "ALL") {
-            updatePaginateParams.filter = "";
-            updatePaginateParams.value = "";
-        } else {
-            updatePaginateParams.filter = "status";
-            updatePaginateParams.value = e;
-        }
-
-        dispatch(setPaginate(updatePaginateParams));
-        dispatch(setStatusFilter(e));
-    };
-
-    const onFilterByDate = (e) => {
-        let updatePaginateParams = { ...paginateParams };
-
-        if (e.startDate === "" || e.endDate === "") {
-            delete updatePaginateParams.start_date;
-            delete updatePaginateParams.end_date;
-        } else {
-            updatePaginateParams.start_date = moment(e.startDate).format("yy-MM-DD");
-            updatePaginateParams.end_date = moment(e.endDate).format("yy-MM-DD");
-        }
-
-        dispatch(setDateFilter(e));
-        dispatch(setPaginate(updatePaginateParams));
-    };
 
     /**
      *  Loading Data
@@ -154,67 +73,6 @@ export const UserTableView = () => {
         loadingData();
     }, [loadingData])
 
-    /**
-     * Table Footer Render
-     * **/
-    const FooterRender = () => {
-        return (
-            <div className=' flex items-center justify-content-between'>
-                <div>{translate.total} - <span style={{ color: "#4338CA" }}> {total.current > 0 ? total.current : 0}</span></div>
-                <div className=' flex align-items-center gap-3'>
-                    <Button
-                        outlined
-                        icon="pi pi-refresh"
-                        size="small"
-                        onClick={() => {
-                            dispatch(setPaginate(userPayload.paginateParams));
-                            dispatch(setStatusFilter("ALL"));
-                            dispatch(setDateFilter({ startDate: "", endDate: "" }));
-                        }}
-                    />
-                    <PaginatorRight
-                        show={showAuditColumn}
-                        onHandler={(e) => setShowAuditColumn(e)}
-                        label={translate.audit_columns}
-                    />
-                </div>
-            </div>
-        )
-    }
-
-    /**
-    * Table Header Render
-    */
-    const HeaderRender = () => {
-        return (
-            <div className="w-full flex flex-column md:flex-row justify-content-between md:justify-content-start align-items-start md:align-items-center gap-3">
-                <Search
-                    tooltipLabel={userPayload.paginateParams.columns}
-                    placeholder={translate.search}
-                    onSearch={(e) => onSearchChange(e)}
-                    label={translate.press_enter_key_to_search}
-                />
-
-                <div className=' flex flex-column md:flex-row align-items-start md:align-items-end justify-content-center gap-3'>
-                    <FilterByStatus
-                        status={userStatus.current}
-                        onFilter={(e) => onFilter(e)}
-                        label={translate.filter_by}
-                    />
-
-                    <FilterByDate
-                        onFilter={(e) => onFilterByDate(e)}
-                        label={translate.filter_by_date}
-                    />
-
-                    <ExportExcel
-                        url={endpoints.exportUser}
-                    />
-                </div>
-            </div>
-        )
-    }
-
 
     return (
         <Card
@@ -227,13 +85,30 @@ export const UserTableView = () => {
 
                 sortField={paginateParams.order}
                 sortOrder={paginateParams.sort === 'DESC' ? 1 : paginateParams.sort === 'ASC' ? -1 : 0}
-                onSort={onSort}
+                onSort={(event) => tableController.onSort(event, paginateParams, dispatch, setPaginate)}
                 sortMode={paginateOptions.sortMode}
                 loading={loading}
                 emptyMessage="No user accounts found."
                 globalFilterFields={userPayload.columns}
-                header={<HeaderRender />}
-                footer={<FooterRender />}
+                header={
+                    <HeaderRender 
+                      translate={translate} 
+                      paginateParams={paginateParams} 
+                      setPaginate={setPaginate} 
+                      userStatus={userStatus.current}
+                      setDateFilter={setDateFilter}
+                      setStatusFilter={setStatusFilter}
+                      />
+                    }
+                    footer={
+                      <FooterRender
+                      total={total}
+                      translate={translate}
+                      showAuditColumn={showAuditColumn}
+                      setShowAuditColumn={setShowAuditColumn}
+                      payload={userPayload}
+                      />
+                    }
             >
                 {showColumns && showColumns.current?.map((col, index) => {
                     return (
@@ -296,7 +171,9 @@ export const UserTableView = () => {
                 rowsPerPageOptions={paginateOptions?.rowsPerPageOptions}
                 template={"FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"}
                 currentPageReportTemplate="Total - {totalRecords} | {currentPage} of {totalPages}"
-                onPageChange={onPageChange}
+                onPageChange={(event) => {
+                    tableController.onPageChange(event, first ,paginateParams, dispatch, setPaginate)
+                }}
             />
         </Card>
     )
