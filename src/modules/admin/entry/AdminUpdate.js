@@ -13,7 +13,6 @@ import { adminService } from "../adminService";
 import { paths } from "../../../constants/paths";
 import { getRequest } from "../../../helpers/api";
 import { Loading } from "../../../shares/Loading";
-import { authorizationService } from "../../authorization/authorizatonService";
 import { formBuilder } from "../../../helpers/formBuilder";
 import { FormMainAction } from "../../../shares/FormMainAction";
 import { ImageUpload } from "../../../shares/ImageUpload";
@@ -48,16 +47,16 @@ export const AdminUpdate = () => {
         if (response.status === 200) {
             setAdminStatus(response.data.user);
         }
-        const result = await authorizationService.roleIndex(dispatch);
-        if (result.status === 200) {
-            const formatData = result.data?.map((role) => {
-                return {
-                    label: role?.name,
-                    value: role?.id
-                }
-            })
-            setRoleList(formatData);
-        }
+        // const result = await authorizationService.roleIndex(dispatch);
+        // if (result.status === 200) {
+        //     const formatData = result.data?.map((role) => {
+        //         return {
+        //             label: role?.name,
+        //             value: role?.id
+        //         }
+        //     })
+        //     setRoleList(formatData);
+        // }
 
         await adminService.show(dispatch, params.id);
         setLoading(false);

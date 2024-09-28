@@ -12,7 +12,6 @@ import { paths } from "../../../constants/paths";
 import { adminService } from "../adminService";
 import { ValidationMessage } from "../../../shares/ValidationMessage";
 import { Loading } from "../../../shares/Loading";
-import { authorizationService } from "../../authorization/authorizatonService";
 import { Dropdown } from "primereact/dropdown";
 import { formBuilder } from "../../../helpers/formBuilder";
 import { FormMainAction } from "../../../shares/FormMainAction";
@@ -33,16 +32,16 @@ export const AdminCreate = () => {
      * **/
     const loaidngData = useCallback(async () => {
         setLoading(true);
-        const result = await authorizationService.roleIndex(dispatch);
-        if (result.status === 200) {
-            const formatData = result.data?.map((role) => {
-                return {
-                    label: role?.name,
-                    value: role?.id
-                }
-            })
-            setRoleList(formatData);
-        }
+        // const result = await authorizationService.roleIndex(dispatch);
+        // if (result.status === 200) {
+        //     const formatData = result.data?.map((role) => {
+        //         return {
+        //             label: role?.name,
+        //             value: role?.id
+        //         }
+        //     })
+        //     setRoleList(formatData);
+        // }
 
         setLoading(false);
     },[dispatch])

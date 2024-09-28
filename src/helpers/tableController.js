@@ -8,6 +8,7 @@ export const tableController = {
      */
     onPageChange(event, first ,paginateParams, dispatch, setPaginate) {
         first.current = event.page * paginateParams.per_page;
+        console.log(first.current);
         dispatch(
             setPaginate({
                 ...paginateParams,
