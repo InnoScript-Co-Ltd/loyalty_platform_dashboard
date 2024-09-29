@@ -36,7 +36,7 @@ const FooterRender = (
                 />
             </div>
         </div>
-    ), [dispatch, translate, total]);
+    ), [dispatch, translate, total, showAuditColumn, setShowAuditColumn]);
 
     return footerContent;
 };
